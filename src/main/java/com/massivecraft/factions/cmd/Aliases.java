@@ -121,7 +121,7 @@ public class Aliases {
     public static ArrayList<String> setWarp = new ArrayList<>(Arrays.asList("sw", "setwarp"));
     public static ArrayList<String> setHome = new ArrayList<>(Collections.singletonList("sethome"));
     public static ArrayList<String> setMaxVaults = new ArrayList<>(Arrays.asList("smv", "setmaxvaults"));
-    public static ArrayList<String> show_show = new ArrayList<>(Arrays.asList("show", "who"));
+    public static ArrayList<String> show_show = new ArrayList<>(Arrays.asList("show", "who", "faction", "f"));
     public static ArrayList<String> show_claims = new ArrayList<>(Arrays.asList("showclaim", "showclaims"));
     public static ArrayList<String> show_invites = new ArrayList<>(Collections.singletonList("showinvites"));
     public static ArrayList<String> spawnerlock = new ArrayList<>(Arrays.asList("lockspawners", "spawnerlock"));

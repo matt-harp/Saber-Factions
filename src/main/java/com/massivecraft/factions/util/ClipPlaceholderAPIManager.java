@@ -110,6 +110,8 @@ public class ClipPlaceholderAPIManager extends PlaceholderExpansion implements R
             // Then Faction stuff
             case "faction_name":
                 return fPlayer.hasFaction() ? faction.getTag() : TL.NOFACTION_PREFIX.toString();
+            case "faction_name_blanknofaction":
+                return fPlayer.hasFaction() ? faction.getTag() : "";
             case "faction_name_custom":
                 return fPlayer.hasFaction() ? Tag.parsePlain(fPlayer, TL.PLACEHOLDER_CUSTOM_FACTION.toString()) : "";
             case "faction_only_space":
