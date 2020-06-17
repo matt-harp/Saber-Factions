@@ -3,15 +3,14 @@ package com.massivecraft.factions.util;
 /**
  * @author Saser
  */
+
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.massivecraft.factions.cmd.audit.FactionLogs;
 import org.bukkit.Bukkit;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.util.Map;
 
 public class JSONUtils {
     public static Gson gson = (new GsonBuilder()).enableComplexMapKeySerialization().create();
@@ -86,15 +85,11 @@ public class JSONUtils {
     }
 
     public static boolean saveJSONToFile(File f, Object toSave, Object token) throws IOException {
-        try {
-            return saveJSONToFile(f, toSave, token, gson);
-        } catch (Throwable var4) {
-            throw var4;
-        }
+        return saveJSONToFile(f, toSave, token, gson);
     }
 
     private static Type getTypeFromObject(Object object) {
-        return object instanceof Type ? (Type)object : getTypeFromClass(object.getClass());
+        return object instanceof Type ? (Type) object : getTypeFromClass(object.getClass());
     }
 
     private static Type getTypeFromClass(Class<?> clazz) {

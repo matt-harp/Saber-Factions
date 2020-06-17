@@ -1,7 +1,6 @@
 package com.massivecraft.factions.cmd.tnt;
 
 import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.Factions;
 import com.massivecraft.factions.FactionsPlugin;
 import com.massivecraft.factions.cmd.Aliases;
 import com.massivecraft.factions.cmd.CommandContext;
@@ -20,7 +19,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CmdTntFill extends FCommand {
 
@@ -36,6 +36,24 @@ public class CmdTntFill extends FCommand {
                 .memberOnly()
                 .withAction(PermissableAction.TNTFILL)
                 .build();
+    }
+
+    public static void removeItems(Inventory inventory, ItemStack item, int toRemove) {
+        if (toRemove <= 0 || inventory == null || item == null)
+            return;
+        for (int i = 0; i < inventory.getSize(); i++) {
+            ItemStack loopItem = inventory.getItem(i);
+            if (loopItem == null || !item.isSimilar(loopItem))
+                continue;
+            if (toRemove <= 0)
+                return;
+            if (toRemove < loopItem.getAmount()) {
+                loopItem.setAmount(loopItem.getAmount() - toRemove);
+                return;
+            }
+            inventory.clear(i);
+            toRemove -= loopItem.getAmount();
+        }
     }
 
     @Override
@@ -146,32 +164,6 @@ public class CmdTntFill extends FCommand {
         }
     }
 
-    public static void removeItems(Inventory inventory, ItemStack item, int toRemove) {
-        if (toRemove <= 0 || inventory == null || item == null)
-            return;
-        for (int i = 0; i < inventory.getSize(); i++) {
-            ItemStack loopItem = inventory.getItem(i);
-            if (loopItem == null || !item.isSimilar(loopItem))
-                continue;
-            if (toRemove <= 0)
-                return;
-            if (toRemove < loopItem.getAmount()) {
-                loopItem.setAmount(loopItem.getAmount() - toRemove);
-                return;
-            }
-            inventory.clear(i);
-            toRemove -= loopItem.getAmount();
-        }
-    }
-
-    // Counts the item type available in the inventory.
-    private int inventoryItemCount(Inventory inventory, Material mat) {
-        int count = 0;
-        HashMap<Integer, ? extends ItemStack> items = inventory.all(mat);
-        for (int item : items.keySet())
-            count += inventory.getItem(item).getAmount();
-        return count;
-    }
 
     public int getAddable(Inventory inv, Material material) {
         int output = 0;

@@ -4,12 +4,12 @@ import com.massivecraft.factions.*;
 import com.massivecraft.factions.event.FactionDisbandEvent.PlayerDisbandReason;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.struct.Role;
-import com.massivecraft.factions.zcore.fdisband.FDisbandFrame;
+import com.massivecraft.factions.util.Cooldown;
 import com.massivecraft.factions.zcore.fperms.Access;
 import com.massivecraft.factions.zcore.fperms.PermissableAction;
+import com.massivecraft.factions.zcore.frame.fdisband.FDisbandFrame;
 import com.massivecraft.factions.zcore.util.TL;
 import org.bukkit.Bukkit;
-import org.bukkit.Sound;
 import org.bukkit.command.ConsoleCommandSender;
 
 import java.util.HashMap;
@@ -21,8 +21,6 @@ public class CmdDisband extends FCommand {
     /**
      * @author FactionsUUID Team
      */
-
-    //TODO: Add Disband Confirmation GUI
 
     private static HashMap<String, String> disbandMap = new HashMap<>();
 
@@ -72,6 +70,11 @@ public class CmdDisband extends FCommand {
             return;
         }
 
+        if (Cooldown.isOnCooldown(context.fPlayer.getPlayer(), "disbandCooldown") && !context.fPlayer.isAdminBypassing()) {
+            context.msg(TL.COMMAND_COOLDOWN);
+            return;
+        }
+
 
         boolean access = false;
         if (context.fPlayer.getPlayer().hasMetadata("disband_confirm") && (time = context.fPlayer.getPlayer().getMetadata("disband_confirm").get(0).asLong()) != 0L && System.currentTimeMillis() - time <= TimeUnit.SECONDS.toMillis(3L)) {
@@ -79,14 +82,13 @@ public class CmdDisband extends FCommand {
         }
 
         if (!access) {
-            if(Conf.useDisbandGUI && !context.fPlayer.isAdminBypassing() || !context.player.isOp()) {
+            if (Conf.useDisbandGUI && (!context.fPlayer.isAdminBypassing() || !context.player.isOp())) {
                 if (!disbandMap.containsKey(context.player.getUniqueId().toString())) {
                     new FDisbandFrame(context.faction).buildGUI(context.fPlayer);
                     return;
                 }
             }
         }
-
 
         // check for tnt before disbanding.
         if (!disbandMap.containsKey(context.player.getUniqueId().toString()) && faction.getTnt() > 0) {
@@ -99,22 +101,15 @@ public class CmdDisband extends FCommand {
                     String amountString = context.sender instanceof ConsoleCommandSender ? TL.GENERIC_SERVERADMIN.toString() : context.fPlayer.describeTo(follower);
                     if (follower.getFaction() == faction) {
                         follower.msg(TL.COMMAND_DISBAND_BROADCAST_YOURS, amountString);
-                        if (!follower.canFlyAtLocation() && FactionsPlugin.getInstance().getConfig().getBoolean("enable-faction-flight")) {
-                            follower.setFFlying(false, false);
-                        }
                     } else {
                         follower.msg(TL.COMMAND_DISBAND_BROADCAST_NOTYOURS, amountString, faction.getTag(follower));
                     }
                 }
-                if (FactionsPlugin.getInstance().getConfig().getBoolean("enable-faction-flight"))
-                    context.fPlayer.setFFlying(false, false);
             } else {
                 context.player.sendMessage(String.valueOf(TL.COMMAND_DISBAND_PLAYER));
             }
             faction.disband(context.player, PlayerDisbandReason.COMMAND);
-            if (!context.fPlayer.canFlyAtLocation() && FactionsPlugin.getInstance().getConfig().getBoolean("enable-faction-flight")) {
-                context.fPlayer.setFFlying(false, false);
-            }
+            Cooldown.setCooldown(context.fPlayer.getPlayer(), "disbandCooldown", FactionsPlugin.getInstance().getConfig().getInt("fcooldowns.f-disband"));
         }
     }
 

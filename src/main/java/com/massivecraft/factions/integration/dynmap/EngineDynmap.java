@@ -12,6 +12,8 @@ import org.dynmap.DynmapAPI;
 import org.dynmap.markers.*;
 import org.dynmap.utils.TileFlags;
 
+import java.awt.*;
+import java.util.List;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -50,6 +52,8 @@ public class EngineDynmap {
     public MarkerAPI markerApi;
     public MarkerSet markerset;
 
+    List<List<Point>> polyLine = new ArrayList<List<Point>>();
+
     private EngineDynmap() {
     }
 
@@ -80,9 +84,7 @@ public class EngineDynmap {
         for (int i = 0; i < string.length(); i++) {
             char c = string.charAt(i);
             if (c > 127 || c == '"' || c == '<' || c == '>' || c == '&') {
-                out.append("&#")
-                        .append((int) c)
-                        .append(';');
+                out.append("&#").append((int) c).append(';');
             } else {
                 out.append(c);
             }
@@ -121,10 +123,12 @@ public class EngineDynmap {
         }
 
         // Shedule non thread safe sync at the end!
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(FactionsPlugin.getInstance(), () -> {
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(FactionsPlugin.getInstance(), () ->
+        {
 
             final Map<String, TempMarker> homes = createHomes();
             final Map<String, TempAreaMarker> areas = createAreas();
+            final Map<String, TempPolyLineMarker> polys = createPolys(areas);
             final Map<String, Set<String>> playerSets = createPlayersets();
 
             if (!updateCore()) {
@@ -138,6 +142,7 @@ public class EngineDynmap {
 
             updateHomes(homes);
             updateAreas(areas);
+            updatePolys(polys);
             updatePlayersets(playerSets);
         }, 100L, 100L);
     }
@@ -240,6 +245,7 @@ public class EngineDynmap {
             Marker marker = markers.remove(markerId);
             if (marker == null) {
                 marker = temp.create(this.markerApi, this.markerset, markerId);
+                marker = temp.create(this.markerApi, this.markerset, markerId);
                 if (marker == null) {
                     EngineDynmap.severe("Could not get/create the home marker " + markerId);
                 }
@@ -260,6 +266,29 @@ public class EngineDynmap {
     // -------------------------------------------- //
 
     // Thread Safe: YES
+
+    public Map<String, TempPolyLineMarker> createPolys(Map<String, TempAreaMarker> areas) {
+        Map<String, TempPolyLineMarker> ret = new HashMap<String, TempPolyLineMarker>();
+        for (Entry<String, TempAreaMarker> entry : areas.entrySet()) {
+            String markerID = entry.getKey();
+            TempAreaMarker area = entry.getValue();
+
+            int counter = 0;
+            for (List<Point> points : area.getPolyLine()) {
+                markerID = markerID + "_poly_" + counter;
+                TempPolyLineMarker tempPoly = new TempPolyLineMarker();
+                tempPoly.polyLine = points;
+                tempPoly.lineColor = area.lineColor;
+                tempPoly.lineOpacity = area.lineOpacity;
+                tempPoly.lineWeight = area.lineWeight;
+                tempPoly.world = area.world;
+                ret.put(markerID, tempPoly);
+                counter++;
+            }
+        }
+        return ret;
+    }
+
     public Map<String, TempAreaMarker> createAreas() {
         Map<String, Map<Faction, Set<FLocation>>> worldFactionChunks = createWorldFactionChunks();
         return createAreas(worldFactionChunks);
@@ -351,12 +380,11 @@ public class EngineDynmap {
 
         // Loop through until we don't find more areas
         while (allChunks != null) {
+
             TileFlags ourChunkFlags = null;
             LinkedList<FLocation> ourChunks = null;
             LinkedList<FLocation> newChunks = null;
 
-            int minimumX = Integer.MAX_VALUE;
-            int minimumZ = Integer.MAX_VALUE;
             for (FLocation chunk : allChunks) {
                 int chunkX = (int) chunk.getX();
                 int chunkZ = (int) chunk.getZ();
@@ -367,18 +395,10 @@ public class EngineDynmap {
                     ourChunks = new LinkedList<>();
                     floodFillTarget(allChunkFlags, ourChunkFlags, chunkX, chunkZ); // Copy shape
                     ourChunks.add(chunk); // Add it to our chunk list
-                    minimumX = chunkX;
-                    minimumZ = chunkZ;
                 }
                 // If shape found, and we're in it, add to our node list
                 else if (ourChunkFlags != null && ourChunkFlags.getFlag(chunkX, chunkZ)) {
                     ourChunks.add(chunk);
-                    if (chunkX < minimumX) {
-                        minimumX = chunkX;
-                        minimumZ = chunkZ;
-                    } else if (chunkX == minimumX && chunkZ < minimumZ) {
-                        minimumZ = chunkZ;
-                    }
                 }
                 // Else, keep it in the list for the next polygon
                 else {
@@ -391,86 +411,129 @@ public class EngineDynmap {
 
             // Replace list (null if no more to process)
             allChunks = newChunks;
-
             if (ourChunkFlags == null) {
                 continue;
             }
+            List<TempLine> outputLines = new ArrayList<TempLine>();
+            Map<TempLine, Integer> lines = new HashMap<TempLine, Integer>();
 
-            // Trace outline of blocks - start from minx, minz going to x+
-            int initialX = minimumX;
-            int initialZ = minimumZ;
-            int currentX = minimumX;
-            int currentZ = minimumZ;
-            Direction direction = Direction.XPLUS;
-            ArrayList<int[]> linelist = new ArrayList<>();
-            linelist.add(new int[]{initialX, initialZ}); // Add start point
-            while ((currentX != initialX) || (currentZ != initialZ) || (direction != Direction.ZMINUS)) {
-                switch (direction) {
-                    case XPLUS: // Segment in X+ direction
-                        if (!ourChunkFlags.getFlag(currentX + 1, currentZ)) { // Right turn?
-                            linelist.add(new int[]{currentX + 1, currentZ}); // Finish line
-                            direction = Direction.ZPLUS; // Change direction
-                        } else if (!ourChunkFlags.getFlag(currentX + 1, currentZ - 1)) { // Straight?
-                            currentX++;
-                        } else { // Left turn
-                            linelist.add(new int[]{currentX + 1, currentZ}); // Finish line
-                            direction = Direction.ZMINUS;
-                            currentX++;
-                            currentZ--;
-                        }
-                        break;
-                    case ZPLUS: // Segment in Z+ direction
-                        if (!ourChunkFlags.getFlag(currentX, currentZ + 1)) { // Right turn?
-                            linelist.add(new int[]{currentX + 1, currentZ + 1}); // Finish line
-                            direction = Direction.XMINUS; // Change direction
-                        } else if (!ourChunkFlags.getFlag(currentX + 1, currentZ + 1)) { // Straight?
-                            currentZ++;
-                        } else { // Left turn
-                            linelist.add(new int[]{currentX + 1, currentZ + 1}); // Finish line
-                            direction = Direction.XPLUS;
-                            currentX++;
-                            currentZ++;
-                        }
-                        break;
-                    case XMINUS: // Segment in X- direction
-                        if (!ourChunkFlags.getFlag(currentX - 1, currentZ)) { // Right turn?
-                            linelist.add(new int[]{currentX, currentZ + 1}); // Finish line
-                            direction = Direction.ZMINUS; // Change direction
-                        } else if (!ourChunkFlags.getFlag(currentX - 1, currentZ + 1)) { // Straight?
-                            currentX--;
-                        } else { // Left turn
-                            linelist.add(new int[]{currentX, currentZ + 1}); // Finish line
-                            direction = Direction.ZPLUS;
-                            currentX--;
-                            currentZ++;
-                        }
-                        break;
-                    case ZMINUS: // Segment in Z- direction
-                        if (!ourChunkFlags.getFlag(currentX, currentZ - 1)) { // Right turn?
-                            linelist.add(new int[]{currentX, currentZ}); // Finish line
-                            direction = Direction.XPLUS; // Change direction
-                        } else if (!ourChunkFlags.getFlag(currentX - 1, currentZ - 1)) { // Straight?
-                            currentZ--;
-                        } else { // Left turn
-                            linelist.add(new int[]{currentX, currentZ}); // Finish line
-                            direction = Direction.XMINUS;
-                            currentX--;
-                            currentZ--;
-                        }
-                        break;
+            if (ourChunks == null) {
+                continue;
+            }
+
+            for (FLocation loc : ourChunks) {
+                int x = loc.getChunk().getX();
+                int z = loc.getChunk().getZ();
+
+                TempLine line = new TempLine(new Point(x * 16, z * 16), new Point(x * 16 + 16, z * 16));
+                if (lines.containsKey(line)) {
+                    lines.put(line, lines.get(line) + 1);
+                } else {
+                    lines.put(line, 1);
+                }
+
+                line = new TempLine(new Point(x * 16 + 16, z * 16), new Point(x * 16 + 16, z * 16 + 16));
+                if (lines.containsKey(line)) {
+                    lines.put(line, lines.get(line) + 1);
+                } else {
+                    lines.put(line, 1);
+                }
+
+                line = new TempLine(new Point(x * 16 + 16, z * 16 + 16), new Point(x * 16, z * 16 + 16));
+                if (lines.containsKey(line)) {
+                    lines.put(line, lines.get(line) + 1);
+                } else {
+                    lines.put(line, 1);
+                }
+
+                line = new TempLine(new Point(x * 16, z * 16 + 16), new Point(x * 16, z * 16));
+                if (lines.containsKey(line)) {
+                    lines.put(line, lines.get(line) + 1);
+                } else {
+                    lines.put(line, 1);
                 }
             }
 
-            int sz = linelist.size();
-            double[] x = new double[sz];
-            double[] z = new double[sz];
-            for (int i = 0; i < sz; i++) {
-                int[] line = linelist.get(i);
-                x[i] = (double) line[0] * (double) BLOCKS_PER_CHUNK;
-                z[i] = (double) line[1] * (double) BLOCKS_PER_CHUNK;
+            Iterator<Entry<TempLine, Integer>> iterator = lines.entrySet().iterator();
+
+            List<TempLine> lineList = new ArrayList<TempLine>();
+            lineList.addAll(lines.keySet());
+
+            while (iterator.hasNext()) {
+                Entry<TempLine, Integer> entry = iterator.next();
+                if (entry.getValue() > 1) {
+                    lineList.remove(entry.getKey());
+                }
             }
 
+            // Find the leftmost MCRWPoint
+
+            TempLine l = null;
+            for (Iterator<TempLine> it = lineList.iterator(); it.hasNext(); ) {
+                TempLine tl = it.next();
+                if (l == null || tl.getP1().x < l.getP1().x)
+                    l = tl;
+            }
+
+            for (Iterator<TempLine> it = lineList.iterator(); it.hasNext(); ) {
+                TempLine tl = it.next();
+                if (tl.getP2().x < l.getP2().x)
+                    l = tl;
+            }
+
+            outputLines.add(l);
+            lineList.remove(l);
+            while (lineList.size() > 0) {
+                // MCRWPoint targetp = new MCRWPoint((int) lastLine.x1, (int) lastLine.y1);
+                // MCRWPointWLines.get(targetp);
+
+                TempLine nextLine = null;
+                for (Iterator<TempLine> it = lineList.iterator(); it.hasNext(); ) {
+                    TempLine line = it.next();
+                    if (l.getP2().x == line.getP1().x && l.getP2().y == line.getP1().y) {
+
+                        nextLine = line;
+                    }
+
+                }
+
+                if (nextLine != null) {
+                    outputLines.add(nextLine);
+                    lineList.remove(nextLine);
+                    l = nextLine;
+                } else {
+                    outputLines.get(outputLines.size() - 1).addAdditionLines(CamScan1(lineList));
+                    break;
+                }
+
+            }
+            List<Point> outputPoints = new ArrayList<Point>();
+
+            List<Point> polyPoints = new ArrayList<Point>();
+
+            for (int i = 0; i < outputLines.size(); i++) {
+                Point p = new Point(outputLines.get(i).getP1().x, outputLines.get(i).getP1().y);
+                outputPoints.add(p);
+                polyPoints.add(p);
+                if (outputLines.get(i).getConnectedLines().size() > 0) {
+
+                    outputPoints.addAll(addRecursivePoints(new Point(outputLines.get(i).getP1().x, outputLines.get(i).getP1().y), outputLines.get(i)));
+                }
+                p = new Point(outputLines.get(i).getP2().x, outputLines.get(i).getP2().y);
+                outputPoints.add(p);
+                polyPoints.add(p);
+            }
+            polyLine.add(polyPoints);
+
             // Build information for specific area
+            double[] x = new double[outputPoints.size()];
+            double[] z = new double[outputPoints.size()];
+
+            for (int i = 0; i < outputPoints.size(); i++) {
+                x[i] = outputPoints.get(i).x;
+                z[i] = outputPoints.get(i).y;
+            }
+
             String markerId = FACTIONS_ + world + "__" + faction.getId() + "__" + markerIndex;
 
             TempAreaMarker temp = new TempAreaMarker();
@@ -488,8 +551,10 @@ public class EngineDynmap {
             temp.fillOpacity = style.getFillOpacity();
 
             temp.boost = style.getBoost();
+            temp.setPolyLine(polyLine);
 
             ret.put(markerId, temp);
+            polyLine.clear();
 
             markerIndex++;
         }
@@ -497,9 +562,113 @@ public class EngineDynmap {
         return ret;
     }
 
+    public List<Point> addRecursivePoints(Point returnPoint, TempLine line) {
+        List<Point> ret = new ArrayList<Point>();
+        boolean shouldReturn = false;
+        List<TempLine> connectedLines = line.getConnectedLines();
+        List<Point> polyPoints = new ArrayList<Point>();
+        for (TempLine line2 : connectedLines) {
+            Point p = new Point(line2.getP1().x, line2.getP1().y);
+            ret.add(p);
+            polyPoints.add(p);
+            shouldReturn = true;
+            if (line2.getConnectedLines().size() > 0) {
+                ret.addAll(addRecursivePoints(new Point(line2.getP1().x, line2.getP1().y), line2));
+            }
+            p = new Point(line2.getP2().x, line2.getP2().y);
+            ret.add(p);
+            polyPoints.add(p);
+
+        }
+        if (shouldReturn) {
+            ret.add(returnPoint);
+        }
+        polyLine.add(polyPoints);
+        return ret;
+    }
+
+    private List<TempLine> CamScan1(List<TempLine> lineList) {
+        List<TempLine> ret = new ArrayList<TempLine>();
+
+        // Find the leftmost MCRWPoint
+
+        TempLine l = null;
+        for (Iterator<TempLine> it = lineList.iterator(); it.hasNext(); ) {
+
+            TempLine tl = it.next();
+            if (l == null || tl.getP1().x < l.getP1().x)
+                l = tl;
+        }
+
+        for (Iterator<TempLine> it = lineList.iterator(); it.hasNext(); ) {
+            TempLine tl = it.next();
+            if (tl.getP2().x < l.getP2().x)
+                l = tl;
+        }
+
+        ret.add(l);
+        lineList.remove(l);
+        while (lineList.size() > 0) {
+            // MCRWPoint targetp = new MCRWPoint((int) lastLine.x1, (int) lastLine.y1);
+            // MCRWPointWLines.get(targetp);
+
+            TempLine thisChunkLine = null;
+            for (Iterator<TempLine> it = lineList.iterator(); it.hasNext(); ) {
+                TempLine line = it.next();
+                if (l.getP2().x == line.getP1().x && l.getP2().y == line.getP1().y) {
+
+                    thisChunkLine = line;
+                }
+
+            }
+            if (thisChunkLine != null) {
+                ret.add(thisChunkLine);
+                lineList.remove(thisChunkLine);
+                l = thisChunkLine;
+            } else {
+                // break;
+                ret.get(ret.size() - 1).addAdditionLines(CamScan1(lineList));
+            }
+
+        }
+        return ret;
+    }
+
     // -------------------------------------------- //
     // UTIL & SHARED
     // -------------------------------------------- //
+
+    public void updatePolys(Map<String, TempPolyLineMarker> polys) {
+        // Map Current
+        Map<String, PolyLineMarker> markers = new HashMap<>();
+        for (PolyLineMarker marker : this.markerset.getPolyLineMarkers()) {
+            markers.put(marker.getMarkerID(), marker);
+        }
+
+        // Loop New
+        for (Entry<String, TempPolyLineMarker> entry : polys.entrySet()) {
+            String markerId = entry.getKey();
+            TempPolyLineMarker temp = entry.getValue();
+
+            // Get Creative
+            // NOTE: I remove from the map created just in the beginning of this method.
+            // NOTE: That way what is left at the end will be outdated markers to remove.
+            PolyLineMarker marker = markers.remove(markerId);
+            if (marker == null) {
+                marker = temp.create(this.markerset, markerId);
+                if (marker == null) {
+                    severe("Could not get/create the area marker " + markerId);
+                }
+            } else {
+                temp.update(marker);
+            }
+        }
+
+        // Only old/outdated should now be left. Delete them.
+        for (PolyLineMarker marker : markers.values()) {
+            marker.deleteMarker();
+        }
+    }
 
     // Thread Safe: NO
     public void updateAreas(Map<String, TempAreaMarker> areas) {
@@ -658,7 +827,6 @@ public class EngineDynmap {
             money = String.format("%.2f", Econ.getBalance(faction.getAccountId()));
         ret = ret.replace("%money%", money);
 
-
         // Players
         Set<FPlayer> playersList = faction.getFPlayers();
         String playersCount = String.valueOf(playersList.size());
@@ -674,7 +842,6 @@ public class EngineDynmap {
         ArrayList<FPlayer> playersModeratorsList = faction.getFPlayersWhereRole(Role.MODERATOR);
         String playersModeratorsCount = String.valueOf(playersModeratorsList.size());
         String playersModerators = getHtmlPlayerString(playersModeratorsList);
-
 
         ArrayList<FPlayer> playersNormalsList = faction.getFPlayersWhereRole(Role.NORMAL);
         String playersNormalsCount = String.valueOf(playersNormalsList.size());

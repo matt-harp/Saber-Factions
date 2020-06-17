@@ -15,8 +15,6 @@ public class UtilFly {
      */
     @Deprecated
     public static void run() {
-        if (!FactionsPlugin.getInstance().getConfig().getBoolean("enable-faction-flight"))
-            return;
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(FactionsPlugin.getInstance(), () -> {
             for (FPlayer fp : FPlayers.getInstance().getOnlinePlayers()) {
@@ -25,10 +23,9 @@ public class UtilFly {
             }
         }, 0, FactionsPlugin.getInstance().getConfig().getInt("fly-task-interval", 10));
     }
+
     @Deprecated
     public static void setFly(FPlayer fp, boolean fly, boolean silent, boolean damage) {
-        if (!FactionsPlugin.getInstance().getConfig().getBoolean("enable-faction-flight"))
-            return;
 
         fp.getPlayer().setAllowFlight(fly);
         fp.getPlayer().setFlying(fly);
@@ -45,6 +42,7 @@ public class UtilFly {
 
         setFallDamage(fp, fly, damage);
     }
+
     @Deprecated
     public static void checkFly(FPlayer me, Faction factionTo) {
         if (!FactionsPlugin.getInstance().getConfig().getBoolean("enable-faction-flight"))
@@ -76,7 +74,7 @@ public class UtilFly {
                     || (factionTo.isWilderness() && !me.canflyinWilderness()) || (factionTo.isWarZone() && !me.canflyinWarzone())
                     || (factionTo.isSafeZone() && !me.canflyinSafezone()) || (relationTo == Relation.ENEMY && !me.canflyinEnemy())
                     || (relationTo == Relation.ALLY && !me.canflyinAlly()) || (relationTo == Relation.TRUCE && !me.canflyinTruce())
-                    || (relationTo == Relation.NEUTRAL && !me.canflyinNeutral())) {
+                    || (relationTo == Relation.NEUTRAL && !me.canflyinNeutral()) || !me.isVanished()) {
                 UtilFly.setFly(me, false, false, false);
             }
         }

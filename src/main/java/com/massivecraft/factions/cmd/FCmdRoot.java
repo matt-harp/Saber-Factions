@@ -8,7 +8,6 @@ import com.massivecraft.factions.cmd.check.CmdCheck;
 import com.massivecraft.factions.cmd.check.CmdWeeWoo;
 import com.massivecraft.factions.cmd.chest.CmdChest;
 import com.massivecraft.factions.cmd.claim.*;
-import com.massivecraft.factions.cmd.configsf.CmdConvertConfig;
 import com.massivecraft.factions.cmd.econ.CmdMoney;
 import com.massivecraft.factions.cmd.grace.CmdGrace;
 import com.massivecraft.factions.cmd.logout.CmdLogout;
@@ -27,6 +26,7 @@ import com.massivecraft.factions.discord.CmdInviteBot;
 import com.massivecraft.factions.discord.CmdSetGuild;
 import com.massivecraft.factions.missions.CmdMissions;
 import com.massivecraft.factions.shop.CmdShop;
+import com.massivecraft.factions.shop.ShopGUIFrame;
 import com.massivecraft.factions.zcore.util.TL;
 import me.lucko.commodore.CommodoreProvider;
 import org.bukkit.Bukkit;
@@ -156,7 +156,6 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
     public CmdCheck cmdCheck = new CmdCheck();
     public CmdWeeWoo cmdWeeWoo = new CmdWeeWoo();
     public CmdWild cmdWild = new CmdWild();
-    public CmdConvertConfig cmdConvertConfig = new CmdConvertConfig();
     public CmdSpawnerLock cmdSpawnerLock = new CmdSpawnerLock();
     public CmdSetDiscord cmdSetDiscord = new CmdSetDiscord();
     public CmdSeeDiscord cmdSeeDiscord = new CmdSeeDiscord();
@@ -168,6 +167,11 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
     public CmdLookup cmdLookup = new CmdLookup();
     public CmdAudit cmdAudit = new CmdAudit();
     public CmdReserve cmdReserve = new CmdReserve();
+    public CmdDelHome cmdDelHome = new CmdDelHome();
+    public CmdClaimFill cmdClaimFill = new CmdClaimFill();
+    public CmdNotifications cmdNotifications = new CmdNotifications();
+    public CmdFriendlyFire cmdFriendlyFire = new CmdFriendlyFire();
+
     //Variables to know if we already setup certain sub commands
     public Boolean discordEnabled = false;
     public Boolean checkEnabled = false;
@@ -184,6 +188,7 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
     public Boolean internalFTOPEnabled = false;
     public Boolean fWildEnabled = false;
     public Boolean fAuditEnabled = false;
+    public Boolean fStrikes = false;
 
     public FCmdRoot() {
         super();
@@ -212,6 +217,7 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
         this.addSubCommand(this.cmdCreate);
         this.addSubCommand(this.cmdDeinvite);
         this.addSubCommand(this.cmdDescription);
+        this.addSubCommand(this.cmdDelHome);
         this.addSubCommand(this.cmdDisband);
         this.addSubCommand(this.cmdHelp);
         this.addSubCommand(this.cmdHome);
@@ -262,6 +268,7 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
         this.addSubCommand(this.cmdDelFWarp);
         this.addSubCommand(this.cmdModifyPower);
         this.addSubCommand(this.cmdLogins);
+        this.addSubCommand(this.cmdClaimFill);
         this.addSubCommand(this.cmdClaimLine);
         this.addSubCommand(this.cmdAHome);
         this.addSubCommand(this.cmdPerm);
@@ -292,13 +299,13 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
         this.addSubCommand(this.cmdChest);
         this.addSubCommand(this.cmdSetBanner);
         this.addSubCommand(this.cmdCorner);
-        this.addSubCommand(this.cmdStrikes);
         this.addSubCommand(this.cmdFGlobal);
         this.addSubCommand(this.cmdViewChest);
-        this.addSubCommand(this.cmdConvertConfig);
         this.addSubCommand(this.cmdSpawnerLock);
         this.addSubCommand(this.cmdDrain);
         this.addSubCommand(this.cmdLookup);
+        this.addSubCommand(this.cmdNotifications);
+        this.addSubCommand(this.cmdFriendlyFire);
         addVariableCommands();
         if (CommodoreProvider.isSupported()) brigadierManager.build();
     }
@@ -355,6 +362,11 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
             fAuditEnabled = true;
         }
 
+        if (Conf.useStrikeSystem) {
+            this.addSubCommand(this.cmdStrikes);
+            fStrikes = true;
+        }
+
         //Other
         if (FactionsPlugin.getInstance().getConfig().getBoolean("Wild.Enabled", false) && !fWildEnabled) {
             this.addSubCommand(this.cmdWild);
@@ -366,6 +378,7 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
         }
         if (FactionsPlugin.getInstance().getConfig().getBoolean("F-Shop.Enabled", false) && !fShopEnabled) {
             this.addSubCommand(this.cmdShop);
+            new ShopGUIFrame(null).checkShopConfig();
             fShopEnabled = true;
         }
         if (FactionsPlugin.getInstance().getConfig().getBoolean("f-inventory-see.Enabled", false) && !invSeeEnabled) {
@@ -388,7 +401,7 @@ public class FCmdRoot extends FCommand implements CommandExecutor {
             addSubCommand(this.cmdFocus);
             fFocusEnabled = true;
         }
-        if (FactionsPlugin.getInstance().getConfig().getBoolean("enable-faction-flight", false) && !fFlyEnabled) {
+        if (FactionsPlugin.getInstance().getConfig().getBoolean("enable-faction-flight", true) && !fFlyEnabled) {
             this.addSubCommand(this.cmdFly);
             fFlyEnabled = true;
         }

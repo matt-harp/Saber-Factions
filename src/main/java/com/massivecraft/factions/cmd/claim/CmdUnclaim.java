@@ -31,13 +31,16 @@ public class CmdUnclaim extends FCommand {
 
         this.requirements = new CommandRequirements.Builder(Permission.UNCLAIM)
                 .playerOnly()
-                .memberOnly()
                 .withAction(PermissableAction.TERRITORY)
                 .build();
     }
 
     @Override
     public void perform(CommandContext context) {
+        if (!context.fPlayer.isAdminBypassing() && !context.fPlayer.hasFaction()) {
+            context.fPlayer.msg(TL.GENERIC_MEMBERONLY);
+            return;
+        }
 
         if (context.args.size() == 2) {
             Faction target = context.argAsFaction(1);
@@ -63,6 +66,11 @@ public class CmdUnclaim extends FCommand {
             boolean didUnClaim = unClaim(new FLocation(context.player), context);
             if (didUnClaim && !context.fPlayer.canFlyAtLocation())
                 context.fPlayer.setFFlying(false, false);
+
+            for(FPlayer fPlayer : context.faction.getFPlayersWhereOnline(true)){
+                if(!fPlayer.canFlyAtLocation())
+                    fPlayer.setFFlying(false, false);
+            }
         } else {
             // radius claim
             if (!Permission.CLAIM_RADIUS.has(context.sender, false)) {
@@ -83,10 +91,13 @@ public class CmdUnclaim extends FCommand {
                         this.stop();
                         return false;
                     }
-
                     return true;
                 }
             };
+
+            boolean didUnClaim = unClaim(new FLocation(context.player), context);
+            if (didUnClaim && !context.fPlayer.canFlyAtLocation())
+                context.fPlayer.setFFlying(false, false);
         }
     }
 

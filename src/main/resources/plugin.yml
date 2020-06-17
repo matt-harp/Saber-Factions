@@ -2,7 +2,7 @@ name: Factions
 version: ${project.version}
 api-version: 1.13
 main: com.massivecraft.factions.FactionsPlugin
-authors: [Olof Larsson, Brett Flannigan, drtshock, ProSavage, SvenjaReißaus, FroggyKnight, Driftay]
+authors: [Olof Larsson, Brett Flannigan, drtshock, ProSavage, DroppingAnvil, Driftay]
 softdepend: [Skript, CoreProtect, PlayerVaults, PlaceholderAPI, MVdWPlaceholderAPI, PermissionsEx, Permissions, Essentials, EssentialsChat, HeroChat, iChat, LocalAreaChat, LWC, nChat, ChatManager, CAPI, AuthMe, Vault, Spout, WorldEdit, WorldGuard, AuthDB, CaptureThePoints, CombatTag, dynmap, FactionsTop]
 
 commands:
@@ -66,6 +66,8 @@ permissions:
   factions.kit.halfplayer:
     description: Can do all but create factions.
     children:
+      factions.notifications: true
+      factions.check: true
       factions.audit: true
       factions.drain: true
       factions.wild: true
@@ -156,6 +158,8 @@ permissions:
     description: auto-claim land as you walk around
   factions.bypass:
     description: enable admin bypass mode
+  factions.friendlyfire:
+    description: ability to toggle on friend fire per player
   factions.lookup:
     description: Lookup claim & home stats for faction
   factions.chat:

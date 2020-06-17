@@ -3,6 +3,10 @@ package com.massivecraft.factions.integration.dynmap;
 import org.dynmap.markers.AreaMarker;
 import org.dynmap.markers.MarkerSet;
 
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+
 public class TempAreaMarker {
 
     /**
@@ -18,15 +22,13 @@ public class TempAreaMarker {
     public double[] x;
     public double[] z;
     public String description;
-
     public int lineColor;
     public double lineOpacity;
     public int lineWeight;
-
     public int fillColor;
     public double fillOpacity;
-
     public boolean boost;
+    private List<List<Point>> polyLine = new ArrayList<List<Point>>();
 
     // -------------------------------------------- //
     // CREATE
@@ -54,6 +56,15 @@ public class TempAreaMarker {
         return true;
     }
 
+    public List<List<Point>> getPolyLine() {
+        return polyLine;
+    }
+
+    public void setPolyLine(List<List<Point>> points) {
+        polyLine.clear();
+        polyLine.addAll(points);
+    }
+
     // -------------------------------------------- //
     // UPDATE
     // -------------------------------------------- //
@@ -61,16 +72,17 @@ public class TempAreaMarker {
     public AreaMarker create(MarkerSet markerset, String markerId) {
         AreaMarker ret = markerset.createAreaMarker(markerId, this.label, false, this.world, this.x, this.z, false // not persistent
         );
-
         if (ret == null) {
             return null;
         }
+
+        int counter = 0;
 
         // Description
         ret.setDescription(this.description);
 
         // Line Style
-        ret.setLineStyle(this.lineWeight, this.lineOpacity, this.lineColor);
+        ret.setLineStyle(0, 0, 0);
 
         // Fill Style
         ret.setFillStyle(this.fillOpacity, this.fillColor);
@@ -80,7 +92,6 @@ public class TempAreaMarker {
 
         return ret;
     }
-
     // -------------------------------------------- //
     // UTIL
     // -------------------------------------------- //
@@ -95,18 +106,15 @@ public class TempAreaMarker {
         if (!marker.getLabel().equals(this.label)) {
             marker.setLabel(this.label);
         }
-
-        // Description
         if (!marker.getDescription().equals(this.description)) {
             marker.setDescription(this.description);
         }
 
-        // Line Style
-        if (marker.getLineWeight() != this.lineWeight ||
-                marker.getLineOpacity() != this.lineOpacity ||
-                marker.getLineColor() != this.lineColor) {
-            marker.setLineStyle(this.lineWeight, this.lineOpacity, this.lineColor);
-        }
+        // // Line Style
+        // if (marker.getLineWeight() != this.lineWeight || marker.getLineOpacity() != this.lineOpacity || marker.getLineColor() != this.lineColor)
+        // {
+        // marker.setLineStyle(this.lineWeight, this.lineOpacity, this.lineColor);
+        // }
 
         // Fill Style
         if ((marker.getFillOpacity() != this.fillOpacity) || (marker.getFillColor() != this.fillColor)) {

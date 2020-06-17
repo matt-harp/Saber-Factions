@@ -6,7 +6,9 @@ import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.FactionsPlugin;
 import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.struct.Relation;
+import com.massivecraft.factions.util.timer.DateTimeFormats;
 import com.massivecraft.factions.zcore.util.TL;
+import org.apache.commons.lang.time.DurationFormatUtils;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -36,6 +38,11 @@ public enum FactionTag implements Tag {
     JOINING("{joining}", (fac) -> (fac.getOpen() ? TL.COMMAND_SHOW_UNINVITED.toString() : TL.COMMAND_SHOW_INVITATION.toString())),
     FACTION("{faction}", (Function<Faction, String>) Faction::getTag),
     FACTION_RELATION_COLOR("{faction-relation-color}", (fac, fp) -> fp == null ? "" : fp.getColorTo(fac).toString()),
+    //SHIELD_STATUS("{shield-status}",(fac) -> {
+        //if(fac.isProtected() && fac.getShieldFrame() != null) return String.valueOf(TL.SHIELD_CURRENTLY_ENABLE);
+        //if(fac.getShieldFrame() == null) return String.valueOf(TL.SHIELD_NOT_SET);
+       // return TL.SHIELD_CURRENTLY_NOT_ENABLED.toString();
+    //}),
     HOME_WORLD("{world}", (fac) -> fac.hasHome() ? fac.getHome().getWorld().getName() : Tag.isMinimalShow() ? null : "{ig}"),
     RAIDABLE("{raidable}", (fac) -> {
         if (FactionsPlugin.getInstance().getConfig().getBoolean("hcf.raidable", false)) {
@@ -50,7 +57,9 @@ public enum FactionTag implements Tag {
         return null;
     }),
 
-    ANNOUNCEMENT("{announcement}", (fac) -> { return String.valueOf(fac.getAnnouncements()); }),
+    ANNOUNCEMENT("{announcement}", (fac) -> {
+        return String.valueOf(fac.getAnnouncements());
+    }),
     PEACEFUL("{peaceful}", (fac) -> fac.isPeaceful() ? Conf.colorNeutral + TL.COMMAND_SHOW_PEACEFUL.toString() : ""),
     PERMANENT("permanent", (fac) -> fac.isPermanent() ? "permanent" : "{notPermanent}"), // no braces needed
     LAND_VALUE("{land-value}", (fac) -> Econ.shouldBeUsed() ? Econ.moneyString(Econ.calculateTotalLandValue(fac.getLandRounded())) : Tag.isMinimalShow() ? null : TL.ECON_OFF.format("value")),
@@ -95,7 +104,7 @@ public enum FactionTag implements Tag {
             return String.valueOf(fac.getFPlayersWhereOnline(false).size());
         }
     }),
-    FACTION_STRIKES("{faction-strikes}",(fac) -> String.valueOf(fac.getStrikes())),
+    FACTION_STRIKES("{faction-strikes}", (fac) -> String.valueOf(fac.getStrikes())),
     FACTION_POINTS("{faction-points}", (fac) -> String.valueOf(fac.getPoints())),
     FACTION_SIZE("{members}", (fac) -> String.valueOf(fac.getFPlayers().size())),
     FACTION_KILLS("{faction-kills}", (fac) -> String.valueOf(fac.getKills())),
@@ -147,10 +156,7 @@ public enum FactionTag implements Tag {
         if (!this.foundInString(text)) {
             return text;
         }
-        String result = null;
-        if (this.biFunction != null) {
-            result = this.function == null ? this.biFunction.apply(faction, player) : this.function.apply(faction);
-        }
+        String result = this.function == null ? this.biFunction.apply(faction, player) : this.function.apply(faction);
         return result == null ? null : text.replace(this.tag, result);
     }
 

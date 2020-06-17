@@ -2,8 +2,10 @@ package com.massivecraft.factions.cmd.wild;
 
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.FactionsPlugin;
-import com.massivecraft.factions.util.FactionGUI;
 import com.massivecraft.factions.util.XMaterial;
+import com.massivecraft.factions.util.wait.WaitExecutor;
+import com.massivecraft.factions.util.wait.WaitTask;
+import com.massivecraft.factions.zcore.frame.FactionGUI;
 import com.massivecraft.factions.zcore.util.TL;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -18,6 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * @author DroppingAnvil
+ */
 public class WildGUI implements FactionGUI {
     Player player;
     FPlayer fplayer;
@@ -35,7 +40,7 @@ public class WildGUI implements FactionGUI {
         if (map.containsKey(slot)) {
             String zone = map.get(slot);
             if (fplayer.hasMoney(FactionsPlugin.getInstance().getConfig().getInt("Wild.Zones." + zone + ".Cost"))) {
-                CmdWild.waitingTeleport.put(player, FactionsPlugin.getInstance().getConfig().getInt("Wild.Wait"));
+                WaitExecutor.taskMap.put(player, new WaitTask(FactionsPlugin.getInstance().getConfig().getInt("Wild.Wait"), TL.COMMAND_WILD_WAIT, player, CmdWild.instance));
                 CmdWild.teleportRange.put(player, zone);
                 fplayer.msg(TL.COMMAND_WILD_WAIT, FactionsPlugin.getInstance().getConfig().getInt("Wild.Wait") + " Seconds");
                 player.closeInventory();
@@ -55,7 +60,8 @@ public class WildGUI implements FactionGUI {
             inv.setItem(fill, fillItem);
         }
         for (String key : Objects.requireNonNull(FactionsPlugin.getInstance().getConfig().getConfigurationSection("Wild.Zones")).getKeys(false)) {
-            ItemStack zoneItem = XMaterial.matchXMaterial(FactionsPlugin.getInstance().getConfig().getString("Wild.Zones." + key + ".Material")).get().parseItem();
+            ItemStack zoneItem = XMaterial.matchXMaterial(Objects.requireNonNull(FactionsPlugin.getInstance().getConfig().getString("Wild.Zones." + key + ".Material"))).get().parseItem();
+            assert zoneItem != null;
             ItemMeta zoneMeta = zoneItem.getItemMeta();
             if (zoneMeta == null) return;
             List<String> lore = new ArrayList<>();

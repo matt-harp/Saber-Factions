@@ -10,6 +10,9 @@ public class Aliases {
     /**
      * @author DroppingAnvil
      */
+
+    public static ArrayList<String> friendlyFire = new ArrayList<>(Arrays.asList("friendlyfire", "ff"));
+    public static ArrayList<String> notifications = new ArrayList<>(Arrays.asList("notifications", "notis"));
     public static ArrayList<String> alts_alts = new ArrayList<>(Arrays.asList("alts", "alt"));
     public static ArrayList<String> alts_list = new ArrayList<>(Arrays.asList("list", "l"));
     public static ArrayList<String> alts_invite = new ArrayList<>(Collections.singletonList("invite"));
@@ -21,8 +24,10 @@ public class Aliases {
     public static ArrayList<String> claim_auto = new ArrayList<>(Collections.singletonList("autoclaim"));
     public static ArrayList<String> claim_claim = new ArrayList<>(Collections.singletonList("claim"));
     public static ArrayList<String> claim_at = new ArrayList<>(Collections.singletonList("claimat"));
+    public static ArrayList<String> claim_claimFill = new ArrayList<>(Arrays.asList("claimfill", "cf"));
     public static ArrayList<String> claim_line = new ArrayList<>(Arrays.asList("claimline", "cl"));
     public static ArrayList<String> claim_corner = new ArrayList<>(Arrays.asList("corner"));
+    public static ArrayList<String> delfHome = new ArrayList<>(Arrays.asList("delhome", "deletehome"));
     public static ArrayList<String> unclaim_all_safe = new ArrayList<>(Arrays.asList("safeunclaimall", "safedeclaimall"));
     public static ArrayList<String> unclaim_unclaim = new ArrayList<>(Arrays.asList("unclaim", "declaim"));
     public static ArrayList<String> unclaim_all_unsafe = new ArrayList<>(Arrays.asList("unclaimall", "declaimall"));
@@ -36,6 +41,7 @@ public class Aliases {
     public static ArrayList<String> money_withdraw = new ArrayList<>(Arrays.asList("w", "withdraw"));
     public static ArrayList<String> grace = new ArrayList<>(Collections.singletonList("grace"));
     public static ArrayList<String> logout = new ArrayList<>(Collections.singletonList("logout"));
+    public static ArrayList<String> points_balance = new ArrayList<>(Arrays.asList("balance", "bal"));
     public static ArrayList<String> points_points = new ArrayList<>(Collections.singletonList("points"));
     public static ArrayList<String> points_add = new ArrayList<>(Collections.singletonList("add"));
     public static ArrayList<String> points_remove = new ArrayList<>(Collections.singletonList("remove"));

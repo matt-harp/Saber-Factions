@@ -1,7 +1,6 @@
 package com.massivecraft.factions;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.massivecraft.factions.integration.dynmap.DynmapStyle;
 import com.massivecraft.factions.util.XMaterial;
 import com.massivecraft.factions.zcore.fperms.DefaultPermissions;
@@ -23,6 +22,7 @@ public class Conf {
     public static final transient String DYNMAP_STYLE_HOME_MARKER = "greenflag";
     public static final transient boolean DYNMAP_STYLE_BOOST = false;
     public static List<String> baseCommandAliases = new ArrayList<>();
+    public static String serverTimeZone = "EST";
     public static boolean allowNoSlashCommand = true;
 
     // Colors
@@ -55,8 +55,8 @@ public class Conf {
     public static boolean factionTagForceUpperCase = false;
     public static boolean newFactionsDefaultOpen = false;
     // when faction membership hits this limit, players will no longer be able to join using /f join; default is 0, no limit
-    public static int factionMemberLimit = 0;
-    public static int factionAltMemberLimit = 0;
+    public static int factionMemberLimit = 30;
+    public static int factionAltMemberLimit = 10;
     // what faction ID to start new players in when they first join the server; default is 0, "no faction"
     public static String newPlayerStartingFactionID = "0";
     public static boolean showMapFactionKey = true;
@@ -87,7 +87,9 @@ public class Conf {
     public static int factionBufferSize = 20;
     public static boolean useCheckSystem = true;
     public static boolean spawnerLock = false;
-    public static boolean gracePeriod = false;
+    public static boolean useGraceSystem = true;
+    public static boolean broadcastGraceToggles = true;
+    public static int gracePeriodTimeDays = 7;
     public static boolean noEnderpearlsInFly = false;
     public static boolean broadcastDescriptionChanges = false;
     public static boolean broadcastTagChanges = false;
@@ -96,17 +98,38 @@ public class Conf {
     public static double autoLeaveRoutineRunsEveryXMinutes = 5.0;
     public static int autoLeaveRoutineMaxMillisecondsPerTick = 5;  // 1 server tick is roughly 50ms, so default max 10% of a tick
     public static boolean removePlayerDataWhenBanned = true;
+    public static String removePlayerDataWhenBannedReason = "Banned by admin.";
     public static boolean autoLeaveDeleteFPlayerData = true; // Let them just remove player from Faction.
     public static boolean worldGuardChecking = false;
     public static boolean worldGuardBuildPriority = false;
+
+    //RADIUS CLAIMING
+    public static boolean useRadiusClaimSystem = true;
+
+    //FRIENDLY FIRE
+    public static boolean friendlyFireFPlayersCommand = false;
+
+    //Claim Fill
+    public static int maxFillClaimCount = 25;
+    public static int maxFillClaimDistance = 5;
+
     public static boolean factionsDrainEnabled = false;
     //RESERVE
     public static boolean useReserveSystem = true;
     //AUDIT
     public static boolean useAuditSystem = true;
 
+    //INSPECT
+    public static boolean useInspectSystem = true;
+
     //GUI's
     public static boolean useDisbandGUI = true;
+
+    //SEALTH
+    public static boolean useStealthSystem = true;
+
+    //STRIKES
+    public static boolean useStrikeSystem = true;
 
     //DISCORD
     public static boolean useDiscordSystem = false;
@@ -123,7 +146,7 @@ public class Conf {
     public static Boolean factionDiscordTags = false;
     public static String factionTag = "(NAME) [FACTION]";
     public static Boolean factionRoles = false;
-    public static List<Integer> factionRoleColor = new ArrayList<Integer>(){{
+    public static List<Integer> factionRoleColor = new ArrayList<Integer>() {{
         add(25);
         add(162);
         add(203);
@@ -142,7 +165,6 @@ public class Conf {
     public static boolean logPlayerCommands = true;
     // prevent some potential exploits
     public static boolean denyFlightIfInNoClaimingWorld = false;
-    public static boolean preventCreeperGlitch = true;
     public static boolean handleExploitObsidianGenerators = true;
     public static boolean handleExploitEnderPearlClipping = true;
     public static boolean handleExploitInteractionSpam = true;
@@ -257,8 +279,8 @@ public class Conf {
     /// Useful for HCF features.
     /// </summary>
     public static Set<Material> territoryBypassProtectedMaterials = EnumSet.noneOf(Material.class);
-    // Dependency check
-    public static boolean dependencyCheck = true;
+
+    public static boolean enableClickToClaim = true;
 
     public static Set<Material> territoryCancelAndAllowItemUseMaterial = new HashSet<>();
     public static Set<Material> territoryDenySwitchMaterials = new HashSet<>();
@@ -268,7 +290,7 @@ public class Conf {
     public static boolean econEnabled = false;
     public static String econUniverseAccount = "";
     public static double econCostClaimWilderness = 30.0;
-    public static double econCostClaimFromFactionBonus = 30.0;
+    public static double econCostClaimFromFactionBonus = 0.0;
     public static double econOverclaimRewardMultiplier = 0.0;
     public static double econClaimAdditionalMultiplier = 0.5;
     public static double econClaimRefundMultiplier = 0.7;
@@ -404,6 +426,10 @@ public class Conf {
     public static HashMap<String, DefaultPermissions> defaultFactionPermissions = new HashMap<>();
     public static HashSet<PermissableAction> lockedPermissions = new HashSet<>();
 
+    public static boolean useComplexFly = true;
+
+    public static boolean wildLoadChunkBeforeTeleport = true;
+
     private static transient Conf i = new Conf();
 
     static {
@@ -534,7 +560,6 @@ public class Conf {
             territoryDenyUsageMaterials.add(Material.ARMOR_STAND);
         }
 
-
         territoryProtectedMaterialsWhenOffline.add(Material.BEACON);
 
         territoryDenyUsageMaterialsWhenOffline.add(XMaterial.FIRE_CHARGE.parseMaterial());
@@ -580,7 +605,9 @@ public class Conf {
         FactionsPlugin.getInstance().persist.save(i);
     }
 
-    public static void saveSync() { FactionsPlugin.instance.persist.saveSync(i); }
+    public static void saveSync() {
+        FactionsPlugin.instance.persist.saveSync(i);
+    }
 
     public enum Backend {
         JSON,

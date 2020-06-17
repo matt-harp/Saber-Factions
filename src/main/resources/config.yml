@@ -171,6 +171,7 @@ scoreboard:
     - " &8» &cYour Balance&7: &f{balance}"
     - "&7&m---------------------------"
 
+  #Formatted ONLY When A User is NOT in a Faction
   factionless-enabled: true
   factionless:
     - "&7&m--------------------------"
@@ -260,6 +261,7 @@ hcf:
   buffer-zone: 0
 
   stuck:
+    Enabled: false
     delay: 30
     radius: 10
 
@@ -280,6 +282,7 @@ show:
   - '&4* &cDescription: &f{description}'
   - '&4* &cLand / Power / Max Power: &f{chunks} &8/ &f{power} &8/ &f{maxPower}'
   - '&4* &cFaction Strikes: &f{strikes}'
+  - '&4* &cShield Status: &f{shield-status}'
   - '&4* &cFaction Points: &f{faction-points}'
   - '&4* &cFounded: &f{create-date}'
   - '&4* &cBalance: &f{faction-balance}'
@@ -291,6 +294,7 @@ show:
   - '&4* &cBans: &f{faction-bancount}'
   - '&8&m----------------------------------------'
 # For a /f show that does not display fancy messages that are essentially empty, use minimal-show
+relational-show: true
 minimal-show: false
 
 # Factions that should be exempt from /f show, case sensitive, useful for a
@@ -339,13 +343,11 @@ list:
 use-old-help: false
 
 help:
-
-
   # You can change the page name to whatever you like
   # We use '1' to preserve default functionality of /f help 1
   '1':
     - '&7&m----------------------------------------------------'
-    - '&6&lFactions Help &8- &f(1/2)               '
+    - '&6&lFactions Help &8- &f(1/3)               '
     - '&7&m----------------------------------------------------'
     - '&c/f create &f<name> &8- &7Create your own faction.'
     - '&c/f who &f<name> &8- &7Show faction information.'
@@ -362,7 +364,9 @@ help:
     - '&c/f banlist &8- &7List banned players from your faction.'
     - '&c/f lowpower &8- &7List player with power under max from your faction.'
     - '&c/f coords &8- &7Broadcast your location to your faction.'
+    #THIS IS AFFILIATED WITH F PERMS PERMISSION (TERRITORY) LOL
     - '&c/f showclaims &8- &7List all claims from your faction.'
+    #THIS IS AFFILIATED WITH F PERMS PERMISSION (TERRITORY) LOL
     - '&7&m--------------------&r &e/f help 2 &7&m-----------------------'
   '2':
     - '&7&m----------------------------------------------------'
@@ -403,6 +407,10 @@ help:
     - '&c/f points &8- &7Check your factions points.'
     - '&c/f invsee &8- &7Check a faction members inventory.'
     - '&c/f stealth &8- &7Go into stealth mode to not disable enemies flight.'
+    - '&c/f notifications &8- &7Disable or enable faction claim notifications.'
+    - '&c/f wild &8- &7Teleport to a random location is a specific radius.'
+    - '&7&m--------------------&r &e/f help &7&m-----------------------'
+
 ############################################################
 # +------------------------------------------------------+ #
 # |                  F Permission GUI                    | #
@@ -590,11 +598,13 @@ fwarp-gui:
       - ' '
 ############################################################
 # +------------------------------------------------------+ #
-# |         Faction Creation/Disband Broadcast           | #
+# |                  Faction Broadcasts                  | #
 # +------------------------------------------------------+ #
 ############################################################
-faction-creation-broadcast: true
-faction-disband-broadcast: true
+faction-creation-broadcast: true #Disabling this will not make faction creation broadcasts appear in chat.
+faction-disband-broadcast: true #Disabling this will not make faction disband broadcasts appear in chat.
+faction-open-broadcast: true #Disabling this will not make faction open broadcasts appear in chat.
+faction-leader-broadcast: true #Disabling this will not make leader changes appear in chat.
 
 ############################################################
 # +------------------------------------------------------+ #
@@ -603,7 +613,7 @@ faction-disband-broadcast: true
 ############################################################
 #Everything else from display names to lores, is managed by lang.yml, so edit it there
 f-check:
-  gui-rows: 3
+  gui-rows: 3 #Rows for the check gui
   wall-check:
     Type: COBBLESTONE
     slot: 10
@@ -619,20 +629,24 @@ f-check:
 # |              Faction Invisibility                    | #
 # +------------------------------------------------------+ #
 ############################################################
-See-Invisible-Faction-Members: false
+#This option is to see if another faction member can see their faction members that have the invisible potion effect
+See-Invisible-Faction-Members: false #ONLY WHEN SCOREBOARD IS ENABLED
 
 ############################################################
 # +------------------------------------------------------+ #
 # |              Faction Inventory See                   | #
 # +------------------------------------------------------+ #
 ############################################################
+#This option is the ability to see other faction members inventories
 f-inventory-see:
   Enabled: true
+
 ############################################################
 # +------------------------------------------------------+ #
 # |                Faction Alt Accounts                  | #
 # +------------------------------------------------------+ #
 ############################################################
+#Faction Alts for extra power, sand printing, afking spawners
 f-alts:
   Enabled: true
 
@@ -657,6 +671,7 @@ frules:
 # |                  Faction TNT Bank                    | #
 # +------------------------------------------------------+ #
 ############################################################
+#Faction Tnt Resolved Around A Virtual TNT Bank With Upgrades If Enabled
 ftnt:
   Enabled: true
   Bank-Limit: 250000
@@ -666,6 +681,7 @@ ftnt:
 # |                 Faction Discord                      | #
 # +------------------------------------------------------+ #
 ############################################################
+#This option allows factions to set their discord link to their specific faction
 fdiscord:
   Enabled: true
 
@@ -674,6 +690,7 @@ fdiscord:
 # |                  Faction PayPal                      | #
 # +------------------------------------------------------+ #
 ############################################################
+#This option allows factions to set their paypal link to their specific faction
 fpaypal:
   Enabled: true
 
@@ -682,6 +699,7 @@ fpaypal:
 # |                  Faction Checkpoints                 | #
 # +------------------------------------------------------+ #
 ############################################################
+#This option is for a quick fast and in a hurry teleport to raids etc.
 checkpoints:
   Enabled: true
 
@@ -690,6 +708,7 @@ checkpoints:
 # |                  Faction Near                        | #
 # +------------------------------------------------------+ #
 ############################################################
+#This option is to allow faction members to be seen via /f near
 fnear:
   Enabled: true
   Radius: 50
@@ -699,6 +718,7 @@ fnear:
 # |                  Faction Shop                        | #
 # +------------------------------------------------------+ #
 ############################################################
+#Faction Shop is 100% configurable (See More in shop.yml)
 F-Shop:
   Enabled: true
   GUI:
@@ -715,7 +735,7 @@ F-Shop:
 # |           Faction Command Cooldowns                  | #
 # +------------------------------------------------------+ #
 ############################################################
-fcooldowns:
+fcooldowns: #All of These Cooldowns Are In Seconds
   f-open: 5
   f-disband: 10
   f-create: 10
@@ -732,13 +752,13 @@ fcooldowns:
 Falling-Block-Fix:
   enabled: true
 
-
 ############################################################
 # +------------------------------------------------------+ #
 # |                  Faction Disband                     | #
 # +------------------------------------------------------+ #
 ############################################################
 f-disband-gui:
+  title: '&7Confirm Disband'
   confirm-item:
     Type: LIME_STAINED_GLASS_PANE
     Name: '&a&lConfirm'
@@ -751,13 +771,17 @@ f-disband-gui:
     Lore:
       - ' '
       - '&7Click to cancel faction disband.'
-
+  separation-item:
+    Type: BLACK_WOOL
+    Name: ' '
+    Lore:
 
 ############################################################
 # +------------------------------------------------------+ #
 # |                Faction GracePeriod                   | #
 # +------------------------------------------------------+ #
 ############################################################
+#This option will deny all explosions
 f-grace:
   Enabled: true
 
@@ -810,7 +834,7 @@ Missions:
       - "&b&lMine &f&n10,000&r &2Sugar Cane"
     Mission:
       Type: "MINE"
-      Material: "SUGAR_CANE_BLOCK"
+      Material: "SUGAR_CANE"
       Amount: 10000
     Reward:
       Commands: ["f points add %faction% 100"]
@@ -889,6 +913,8 @@ ffocus:
 # |                  Faction Vault                       | #
 # +------------------------------------------------------+ #
 ############################################################
+#Faction Vaults are a placeable chest that can be accessed
+#While maintaining that factor it can still be raided by other factions.
 fvault:
   Enabled: true
   No-Hoppers-near-vault: true
@@ -907,6 +933,8 @@ fvault:
 # |                  Faction Chest                       | #
 # +------------------------------------------------------+ #
 ############################################################
+#Faction Chests are a virtual chest based system that cannot be raided
+#Used for storing items that equate to high value of the faction.
 fchest:
   Enabled: true
   Default-Size: 1 #In Rows
@@ -932,6 +960,7 @@ fupgrades:
       Lore:
         - ' '
     Crops:
+      Max-Level: 4
       Crop-Boost:
         level-1: 10
         level-2: 20
@@ -947,7 +976,7 @@ fupgrades:
         Lore:
           - '&7&oIncrease growth &c&ospeed&7&o of crops in &c&oclaims.'
           - '&7&oChance to Grow Two Levels.'
-          - 'Current level is &e&l&o{level}'
+          - '&7&oYour current level is &e&l&o{level}'
           - ''
           - '&c&lChances'
           - '&4&l* &cLevel 1: &f10% Chance'
@@ -962,6 +991,7 @@ fupgrades:
           - '&7&o(( Tip: &f&oleft-click&7&o to &c&oupgrade&7&o ))'
         Slot: 31
     EXP:
+      Max-Level: 3
       EXP-Boost:
         level-1: 1.5
         level-2: 2.0
@@ -991,6 +1021,7 @@ fupgrades:
           - '&7&o(( Tip: &f&oleft-click&7&o to &c&oupgrade&7&o ))'
         Slot: 32
     Power:
+      Max-Level: 3
       Power-Boost:
         level-1: 100.0
         level-2: 200.0
@@ -1006,7 +1037,7 @@ fupgrades:
         Lore:
           - '&a&oIncrease&7&o the amount of &c&opower'
           - '&7&oyour &a&ofaction has&7&o.'
-          - 'Current level is &e&l&o{level}'
+          - '&7&oYour current level is &e&l&o{level}'
           - ''
           - '&c&lIncreased Faction Power'
           - '&4&l* &cLevel 1: &f100'
@@ -1021,6 +1052,7 @@ fupgrades:
           - '&7&o(( Tip: &f&oleft-click&7&o to &c&oupgrade&7&o ))'
         Slot: 22
     Redstone:
+      Max-Level: 1
       Cost:
         level-1: 1000000
       DisplayItem:
@@ -1036,6 +1068,7 @@ fupgrades:
           - '&7&o(( Tip: &f&oLeft-click&7&o to &c&oupgrade&7&o ))'
         Slot: 23
     Spawners:
+      Max-Level: 3
       Spawner-Boost:
         # This is a Percentage so .10 means 10% lowered spawner delay!
         level-1: 0.10
@@ -1056,7 +1089,7 @@ fupgrades:
           - '&c&lDecreased Spawner Delay'
           - '&4&l* &cLevel 1: &f0.10%'
           - '&4&l* &cLevel 2: &f0.20%'
-          - '&4&l* &cLevel 3: &f0.30'
+          - '&4&l* &cLevel 3: &f0.30%'
           - '&f'
           - '&c&lCosts'
           - '&4&l* &cLevel 1: &f$1,000,000'
@@ -1066,6 +1099,7 @@ fupgrades:
           - '&7&o(( Tip: &f&oleft-click&7&o to &c&oupgrade&7&o ))'
         Slot: 30
     DamageReduct:
+      Max-Level: 3
       DamageReductPercent:
         level-1: 3
         level-2: 5
@@ -1095,6 +1129,7 @@ fupgrades:
           - '&7&o(( Tip: &f&oleft-click&7&o to &c&oupgrade&7&o ))'
         Slot: 7
     DamageIncrease:
+      Max-Level: 3
       DamageIncreasePercent:
         level-1: 3
         level-2: 5
@@ -1124,6 +1159,7 @@ fupgrades:
           - '&7&o(( Tip: &f&oleft-click&7&o to &c&oupgrade&7&o ))'
         Slot: 1
     TNT:
+      Max-Level: 3
       tnt-limit:
         level-1: 500000
         level-2: 1000000
@@ -1153,6 +1189,7 @@ fupgrades:
           - '&7&o(( Tip: &f&oleft-click&7&o to &c&oupgrade&7&o ))'
         Slot: 21
     Warps:
+      Max-Level: 3
       warp-limit:
         level-1: 3
         level-2: 4
@@ -1182,6 +1219,7 @@ fupgrades:
           - '&7&o(( Tip: &f&oleft-click&7&o to &c&oupgrade&7&o ))'
         Slot: 24
     Chest:
+      Max-Level: 3
       Chest-Size:
         # This is rows
         level-1: 2
@@ -1212,10 +1250,11 @@ fupgrades:
           - '&7&o(( Tip: &f&oleft-click&7&o to &c&oupgrade&7&o ))'
         Slot: 20
     Members:
+      Max-Level: 3
       Members-Limit:
-        level-1: 30
-        level-2: 35
-        level-3: 40
+        level-1: 5 #The Number Of Members It Will Increase By
+        level-2: 10
+        level-3: 15
       Cost:
         level-1: 1000000
         level-2: 2000000
@@ -1229,9 +1268,9 @@ fupgrades:
           - '&7&oYour current level is &e&l&o{level}'
           - ''
           - '&c&lFaction Member Limit'
-          - '&4&l* &cLevel 1: &f30'
-          - '&4&l* &cLevel 2: &f35'
-          - '&4&l* &cLevel 3: &f40'
+          - '&4&l* &cLevel 1: &f35'
+          - '&4&l* &cLevel 2: &f40'
+          - '&4&l* &cLevel 3: &f45'
           - '&f'
           - '&c&lCosts'
           - '&4&l* &cLevel 1: &f$1,000,000'
@@ -1241,6 +1280,7 @@ fupgrades:
           - '&7&o(( Tip: &f&oleft-click&7&o to &c&oupgrade&7&o ))'
         Slot: 40
     Armor:
+      Max-Level: 3
       Armor-HP-Drop:
         # HP Drop is in percent so .10 would mean it would drop 10% of the damage to the armor
         level-1: .10
@@ -1334,6 +1374,11 @@ fbanners:
     Warzone: false
     Enemy: true
 
+############################################################
+# +------------------------------------------------------+ #
+# |                 Faction Titles                       | #
+# +------------------------------------------------------+ #
+############################################################
 #Title when moving between chunks
 Title:
   Show-Title: true
@@ -1346,12 +1391,23 @@ Title:
     Title: '{Faction}'
     Subtitle: '{Description}'
 
-
+############################################################
+# +------------------------------------------------------+ #
+# |                   F SeeChunk                         | #
+# +------------------------------------------------------+ #
+############################################################
 # /f seechunk options
 see-chunk:
   particles: true
   interval: 5
 
+############################################################
+# +------------------------------------------------------+ #
+# |               No Water Destruction                   | #
+# +------------------------------------------------------+ #
+############################################################
+#A list of blocks that cannot be broken by water ONLY
+#if unbreakable f upgrade is purchased
 no-water-destroy:
   Item-List:
     - 'REDSTONE_COMPARATOR'
@@ -1365,10 +1421,21 @@ no-water-destroy:
     - 'DIODE_BLOCK_ON'
     - 'REDSTONE'
 
+############################################################
+# +------------------------------------------------------+ #
+# |                 Faction Tntfill                      | #
+# +------------------------------------------------------+ #
+############################################################
 Tntfill:
   enabled: true
   max-radius: 32
   max-amount: 64
+
+############################################################
+# +------------------------------------------------------+ #
+# |                   Faction Wild                       | #
+# +------------------------------------------------------+ #
+############################################################
 Wild:
   Enabled: true
   # Time to wait in seconds #
@@ -1383,6 +1450,7 @@ Wild:
   Zones:
     # You may create your own zones here please just follow the original format #
    Close:
+     World: world
      Range:
        MinX: -200
        MaxX: 200
@@ -1397,6 +1465,7 @@ Wild:
      Name: '&cLow Range'
      Slot: 1
    Medium:
+     World: world
      Range:
        MinX: -400
        MaxX: 400
@@ -1411,6 +1480,7 @@ Wild:
      Name: '&cMedium Range'
      Slot: 4
    Far:
+     World: world
      Range:
        MinX: -800
        MaxX: 800
@@ -1459,6 +1529,7 @@ Wild:
 #  - {player-kills} : # of kills the player has
 #  - {player-deaths}: # of deaths the player has
 #  - {total-online-visible}: # of players online from the perspective of the current player
+
 # Faction variables. Can be used in tooltips.list, scoreboards, or /f show
 #  - {header}    : Default factions header (ex. /f show)
 #  - {faction}   : Factions tag (if none, uses lang.yml for factionless name)
@@ -1484,13 +1555,22 @@ Wild:
 #  - {faction-deaths}: # of deaths the faction has
 #  - {faction-bancount} : # of bans the faction has
 #  - {faction-points} : # of points a faction has
+#  - {announcement} : Faction announcements
+#  - {raidable} : if a faction is raidable
+#  - {tnt-balance} : # of tnt a faction has in their tnt bank
+#  - {tnt-max-balance} : # of possible tnt a faction can have in their tnt bank
+#  - {faction-strikes} : # of strikes a faction has
+#  - {shield-status} : Status of the factions shield
+
 # Faction Permissions GUI variables. Can only be used in GUI
 # - {relation}            : Shows relation name (Can be used in action and relation)
 # - {relation-color}      : Relation color
 # - {action}              : Shows action name (Can only be used in action)
 # - {action-access}       : Shows the action's access with current relation
 # - {action-access-color} : Access color
+
 # General variables. Can be used anywhere.
+# - {grace-time}  : Time of Grace Period
 # - {total-online}  : Total # of players on the server
 # - {max-warps}     : Max # of warps a faction can set
 # - {max-allies}    : Max # of allies a faction can have

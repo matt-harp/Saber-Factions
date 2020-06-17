@@ -1,24 +1,13 @@
 package com.massivecraft.factions.cmd;
 
 import com.massivecraft.factions.*;
-import com.massivecraft.factions.cmd.audit.FLogType;
-import com.massivecraft.factions.discord.Discord;
 import com.massivecraft.factions.event.FPlayerJoinEvent;
 import com.massivecraft.factions.struct.Permission;
-import com.massivecraft.factions.util.CC;
-import com.massivecraft.factions.zcore.fupgrades.UpgradeType;
+import com.massivecraft.factions.zcore.frame.fupgrades.UpgradeType;
 import com.massivecraft.factions.zcore.util.TL;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.exceptions.HierarchyException;
 import org.bukkit.Bukkit;
 
-import java.util.Objects;
-
 public class CmdJoin extends FCommand {
-
-    /**
-     * @author FactionsUUID Team
-     */
 
     public CmdJoin() {
         super();
@@ -56,7 +45,7 @@ public class CmdJoin extends FCommand {
             return;
         }
 
-        if (Conf.factionMemberLimit > 0 && faction.getFPlayers().size() >= getFactionMemberLimit(faction)) {
+        if (!faction.altInvited(fplayer) && Conf.factionMemberLimit > 0 && faction.getFPlayers().size() >= getFactionMemberLimit(faction)) {
             context.msg(TL.COMMAND_JOIN_ATLIMIT, faction.getTag(context.fPlayer), getFactionMemberLimit(faction), fplayer.describeTo(context.fPlayer, false));
             return;
         }
@@ -127,34 +116,20 @@ public class CmdJoin extends FCommand {
         }
 
         faction.deinvite(fplayer);
-        try {
-            context.fPlayer.setRole(faction.getDefaultRole());
-            FactionsPlugin.instance.logFactionEvent(faction, FLogType.INVITES, context.fPlayer.getName(), CC.Green + "joined", "the faction");
-            if (Discord.useDiscord && context.fPlayer.discordSetup() && Discord.isInMainGuild(context.fPlayer.discordUser()) && Discord.mainGuild != null) {
-                Member m = Discord.mainGuild.getMember(context.fPlayer.discordUser());
-                if (Conf.factionRoles) {
-                    Discord.mainGuild.getController().addSingleRoleToMember(m, Objects.requireNonNull(Discord.createFactionRole(faction.getTag()))).queue();
-                }
-                if (Conf.factionDiscordTags) {
-                    Discord.mainGuild.getController().setNickname(m, Discord.getNicknameString(context.fPlayer)).queue();
-                }
-            }
-        } catch (HierarchyException e) {
-            System.out.print(e.getMessage());
-        }
+        context.fPlayer.setRole(faction.getDefaultRole());
 
         if (Conf.logFactionJoin) {
             if (samePlayer) {
-                FactionsPlugin.getInstance().log(TL.COMMAND_JOIN_JOINEDLOG.toString(), fplayer.getName(), faction.getTag());
+                FactionsPlugin.instance.log(TL.COMMAND_JOIN_JOINEDLOG.toString(), fplayer.getName(), faction.getTag());
             } else {
-                FactionsPlugin.getInstance().log(TL.COMMAND_JOIN_MOVEDLOG.toString(), context.fPlayer.getName(), fplayer.getName(), faction.getTag());
+                FactionsPlugin.instance.log(TL.COMMAND_JOIN_MOVEDLOG.toString(), context.fPlayer.getName(), fplayer.getName(), faction.getTag());
             }
         }
     }
 
     private int getFactionMemberLimit(Faction f) {
         if (f.getUpgrade(UpgradeType.MEMBERS) == 0) return Conf.factionMemberLimit;
-        return Conf.factionMemberLimit + FactionsPlugin.getInstance().getConfig().getInt("fupgrades.MainMenu.Members.Member-Boost.level-" + f.getUpgrade(UpgradeType.MEMBERS));
+        return Conf.factionMemberLimit + FactionsPlugin.getInstance().getConfig().getInt("fupgrades.MainMenu.Members.Members-Limit.level-" + f.getUpgrade(UpgradeType.MEMBERS));
     }
 
     @Override
